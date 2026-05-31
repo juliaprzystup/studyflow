@@ -1,0 +1,28 @@
+# Wirtualne srodowisko
+.venv/
+venv/
+env/
+
+# Cache Pythona
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Baza danych SQLite (tworzona automatycznie na serwerze)
+*.db
+instance/
+
+# Wgrywane przez uzytkownikow pliki (nie trzymamy ich w repo)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Sekrety / zmienne srodowiskowe
+.env
+
+# Pliki IDE / systemowe
+.idea/
+.vscode/
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Statystyki - StudyFlow{% endblock %}
+
+{% block content %}
+<section class="mb-4">
+    <div class="page-header mb-4">
+        <div>
+            <span class="badge text-bg-light px-3 py-2 mb-3">Insights</span>
+            <h1 class="mb-2">Statystyki nauki</h1>
+            <p class="mb-0">Szczegółowa historia quizów i szybkie podsumowanie Twoich wyników.</p>
+        </div>
+        <a href="{{ url_for('quizzes_list') }}" class="btn btn-primary">Rozwiąż kolejny quiz</a>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <p class="text-uppercase small fw-semibold mb-2">Rozwiązane quizy</p>
+                    <p class="metric-value mb-0">{{ total_quizzes_solved }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <p class="text-uppercase small fw-semibold mb-2">Średni wynik</p>
+                    <p class="metric-value mb-0">{{ average_score }}%</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <p class="text-uppercase small fw-semibold mb-2">Najlepszy wynik</p>
+                    <p class="metric-value mb-0">{{ best_score }}%</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <p class="text-uppercase small fw-semibold mb-2">Ostatni wynik</p>
+                    <p class="metric-value mb-0">{{ latest_score }}%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-4">
+    <div class="card">
+        <div class="card-header p-4 pb-0 border-0">
+            <h4 class="mb-1">Trend skuteczności</h4>
+            <p class="mb-0">Ostatnie 10 podejść (od najstarszego do najnowszego).</p>
+        </div>
+        <div class="card-body p-4">
+            {% if trend_attempts %}
+            <div class="trend-chart">
+                {% for attempt in trend_attempts %}
+                <div class="trend-bar-group">
+                    <div class="trend-bar-wrap">
+                        <div class="trend-bar {% if attempt.percent >= 80 %}is-good{% elif attempt.percent >= 50 %}is-mid{% else %}is-low{% endif %}"
+                             style="height: {{ [attempt.percent, 8]|max }}%;">
+                        </div>
+                    </div>
+                    <div class="trend-label">{{ attempt.percent }}%</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="mb-0 text-muted">Brak danych do wyświetlenia trendu. Rozwiąż pierwszy quiz.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="card">
+        <div class="card-header p-4 pb-0 border-0">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <h4 class="mb-1">Historia quizów</h4>
+                    <p class="mb-0">Pełna lista ostatnich podejść i skuteczności.</p>
+                </div>
+                <span class="badge surface-muted text-dark px-3 py-2">Szczegóły</span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if attempts %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Data i godzina</th>
+                            <th>Nazwa Quizu</th>
+                            <th>Wynik punktowy</th>
+                            <th>Skuteczność</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attempt in attempts %}
+                        <tr>
+                            <td class="ps-4 text-muted"><small>{{ attempt.created_at.strftime('%d.%m.%Y, %H:%M') }}</small></td>
+                            <td><strong>{{ attempt.quiz.title }}</strong></td>
+                            <td>{{ attempt.score }} / {{ attempt.total_questions }} pkt</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-3 fw-bold">{{ attempt.percent }}%</span>
+                                    <div class="progress flex-grow-1" style="height: 8px; max-width: 180px;">
+                                        <div class="progress-bar
+                                            {% if attempt.percent >= 80 %}bg-success
+                                            {% elif attempt.percent >= 50 %}bg-warning
+                                            {% else %}bg-danger{% endif %}"
+                                             role="progressbar" style="width: {{ attempt.percent }}%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-5 text-center text-muted">
+                <h5 class="mb-2">Brak historii quizów</h5>
+                <p class="mb-4">Rozwiąż pierwszy quiz, aby zobaczyć szczegółowe statystyki.</p>
+                <a href="{{ url_for('quizzes_list') }}" class="btn btn-primary">Przejdź do quizów</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

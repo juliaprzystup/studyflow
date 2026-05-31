@@ -1,0 +1,76 @@
+Analiza pracy licencjackiej: StudyFlow
+
+Przeczytano caly dokument (47 stron) i oceniono go pod katem:
+- powtorzen tresci
+- proporcji miedzy rozdzialami
+- poziomu technicznego
+- jakosci narracji
+- kompletnosci materialu ilustracyjnego (rysunki/tabele/screeny)
+
+Ocena ogolna
+- Bardzo dobra baza merytoryczna i logiczna struktura.
+- Najwieksza rezerwa jakosci lezy w stylu: zbyt duzo marketingowych sformulowan i powtarzania tych samych tez.
+- Po skroceniu i ujednoliceniu jezyka praca moze wejsc na poziom "bardzo dobra+".
+
+Najmocniejsze strony
+- Spojna os projektu: dokument -> podsumowanie -> quiz/fiszki -> nauka.
+- Dobra kolejnosc rozdzialow i poprawna logika od teorii do wdrozenia.
+- Konkretny opis bezpieczenstwa (RBAC, IDOR, CSRF, limit uploadu).
+- Rozdzial 6 zawiera testy automatyczne i manualne (hybryda).
+- Obecne rysunki sa sensowne i powiazane z trescia.
+
+Najwazniejsze problemy
+- Nadmiar stylu marketingowego zamiast inzynierskiego.
+- Powtorzenia tych samych opisow technologii i architektury.
+- Zbyt rozbudowany rozdzial 5 wzgledem 6 (testow).
+- Za malo tabel przekrojowych (jest tylko tabela 6.1).
+- Nieliczne literowki i pojedyncze niescislosci slowne.
+
+Powtorzenia i miejsca do skrocenia
+1) Python/Flask/SQLAlchemy:
+   Podobne akapity pojawiaja sie w 2.3 oraz ponownie w 4.1.
+   W 4.1 warto zostawic tylko to, co implementacyjne, a definicje technologii skrocic.
+
+2) Architektura warstwowa i MVC/MTV:
+   Opisana teoretycznie i ponownie niemal tym samym jezykiem w projekcie.
+   Jeden opis powinien byc przekrojowy, drugi tylko "jak to zrobiono w kodzie".
+
+3) Responsywnosc i dostepnosc:
+   Motyw dark mode, RWD i ergonomia wracaja wielokrotnie.
+   Wystarczy jedno mocne miejsce + odwolywanie sie do niego.
+
+4) "Document-centric":
+   Powtarzane w wielu miejscach podrecznika uzytkownika.
+   Wystarczy jedna definicja i dalsze uzywanie terminu bez ponownego tlumaczenia.
+
+Czy potrzeba wiecej screenow, tabel, rysunkow?
+- Screeny: raczej wystarczajaco. Lepiej dodac 1-2 brakujace techniczne (np. blad CSRF, limit 16 MB).
+- Tabele: zdecydowanie warto dodac 2-3 tabele przekrojowe.
+
+Co dodac, zeby praca byla mocniejsza
+- Tabela A: mapowanie wymagan funkcjonalnych na moduly i endpointy.
+- Tabela B: zbiorcze wyniki testow (auto/manual, status, komentarz).
+- Tabela C: podsumowanie ryzyk i zabezpieczen (IDOR, CSRF, RBAC, upload limit).
+- Rysunek D: prosty diagram sekwencji "upload -> ekstrakcja -> zapis -> generacja podsumowania".
+
+Krytyczne poprawki stylistyczne (przed oddaniem)
+- Zamienic jezyk marketingowy na neutralny techniczny.
+- Ograniczyc superlatywy tam, gdzie brak mierzalnego dowodu.
+- Ujednolicic nazewnictwo: "praca licencjacka", konsekwentnie "uzytkownik".
+- Usunac literowki i drobne bledy (np. "skutrecznosci", "perspekbywy").
+
+Plan poprawek na 2 dni
+Dzien 1:
+- Skrocic 2.3 i 4.1 (usunac duplikaty).
+- Wyczyzcic styl marketingowy.
+- Poprawic literowki i spojnosc terminow.
+
+Dzien 2:
+- Dodac 2-3 tabele przekrojowe.
+- Dodac 1 rysunek sekwencji lub przeplywu.
+- Uzupelnic krotki komentarz do wynikow testow.
+
+Efekt koncowy
+- Mniej objetosci, wiecej konkretu.
+- Lepszy balans miedzy wdrozeniem i ewaluacja.
+- Wyzsza ocena za inzynierski charakter pracy.

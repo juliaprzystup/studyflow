@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Wyniki - Quiz: {{ quiz.document.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <div class="page-header">
+            <div>
+                <h1>Wyniki quizu</h1>
+                <p class="text-muted">Podsumowanie odpowiedzi dla dokumentu: {{ quiz.document.title }}.</p>
+            </div>
+            <a href="{{ url_for('quizzes_list') }}" class="btn btn-primary">Wróć do quizów</a>
+        </div>
+        <div class="text-center mb-4">
+            <h3 class="display-4">{{ score }} / {{ total }}</h3>
+
+            {% set percentage = (score / total * 100)|int %}
+            {% if percentage >= 80 %}
+                <div class="alert alert-success">
+                    <h4> Świetna robota!</h4>
+                    <p>Zdobyłeś/aś {{ percentage }}% punktów!</p>
+                </div>
+            {% elif percentage >= 50 %}
+                <div class="alert alert-warning">
+                    <h4> Nieźle!</h4>
+                    <p>Zdobyłeś/aś {{ percentage }}% punktów. Jeszcze trochę i będzie perfekcyjnie!</p>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <h4> Nie poddawaj się!</h4>
+                    <p>Zdobyłeś/aś {{ percentage }}% punktów. Spróbuj ponownie po powtórce treści!</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <h4>Szczegóły odpowiedzi:</h4>
+
+        {% for result in results %}
+        <div class="card mb-3 {% if result.is_correct %}border-success{% else %}border-danger{% endif %}">
+            <div class="card-body">
+                <h5 class="card-title">
+                    Pytanie {{ loop.index }}
+                    {% if result.is_correct %}
+                        <span class="badge bg-success">✓ Poprawnie</span>
+                    {% else %}
+                        <span class="badge bg-danger">✗ Błędnie</span>
+                    {% endif %}
+                </h5>
+                <p class="card-text">{{ result.question }}</p>
+
+                {% if not result.is_correct %}
+                    <div class="alert alert-info mb-0">
+                        <strong>Poprawna odpowiedź:</strong> {{ result.correct_text }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="d-grid gap-2 mt-4">
+            <a href="{{ url_for('take_quiz', quiz_id=quiz.id) }}" class="btn btn-primary">Spróbuj ponownie</a>
+            <a href="{{ url_for('quizzes_list') }}" class="btn btn-secondary">Powrót do listy quizów</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Quizy - StudyFlow{% endblock %}
+
+{% block content %}
+<section>
+    <div class="page-header mb-4">
+        <div>
+            <span class="badge text-bg-light px-3 py-2 mb-3">Materiały</span>
+            <h1 class="mb-2">Wybierz materiał do testu</h1>
+            <p class="mb-0">Każdy dokument tworzy własny zestaw quizów - sprawdź się z konkretnego materiału.</p>
+        </div>
+        <a href="{{ url_for('notes_list') }}" class="btn btn-primary">+ Wygeneruj nowy quiz</a>
+    </div>
+
+    {% if quiz_decks %}
+        <div class="row g-4">
+            {% for deck in quiz_decks %}
+            <div class="col-lg-4 col-md-6">
+                <div class="card card-interactive h-100">
+                    <div class="card-body p-4 d-flex flex-column">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <span class="badge-source">🧪 Materiał</span>
+                            {% if deck.last_percent is not none %}
+                                <span class="badge rounded-pill
+                                    {% if deck.last_percent >= 80 %}bg-success
+                                    {% elif deck.last_percent >= 50 %}bg-warning
+                                    {% else %}bg-danger{% endif %}">
+                                    Ostatni: {{ deck.last_percent }}%
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary rounded-pill">Brak wyniku</span>
+                            {% endif %}
+                        </div>
+
+                        <h5 class="card-title mb-2">{{ deck.document.title }}</h5>
+                        <p class="text-muted mb-3">
+                            <small>
+                                📅 Ostatnie podejście:
+                                {% if deck.last_quiz_at %}
+                                    {{ deck.last_quiz_at.strftime('%d.%m.%Y, %H:%M') }}
+                                {% else %}
+                                    nigdy
+                                {% endif %}
+                            </small>
+                        </p>
+
+                        <div class="d-flex align-items-baseline gap-2 mb-3 flex-grow-1">
+                            <span class="metric-value" style="font-size: 1.9rem;">{{ deck.quiz_count }}</span>
+                            <span class="text-muted">
+                                {% if deck.quiz_count == 1 %}podejście do quizu
+                                {% elif 2 <= deck.quiz_count <= 4 %}podejścia do quizu
+                                {% else %}podejść do quizu{% endif %}
+                            </span>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2 mt-auto">
+                            <a href="{{ url_for('generate_quiz', note_id=deck.document.id) }}"
+                               class="btn btn-primary btn-sm">▶ Rozwiąż nowy quiz</a>
+                            <a href="{{ url_for('view_note', note_id=deck.document.id) }}"
+                               class="btn btn-outline-primary btn-sm">Historia wyników</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state card p-5 text-center">
+            <i class="bi bi-patch-question display-4 d-block mb-3" style="color: var(--sf-primary);"></i>
+            <h5 class="mb-2">Brak materiałów z quizami</h5>
+            <p class="mb-4">Wygeneruj quiz z dowolnego dokumentu, aby zacząć regularnie sprawdzać swoją wiedzę.</p>
+            <div>
+                <a href="{{ url_for('notes_list') }}" class="btn btn-primary">Przejdź do dokumentów</a>
+            </div>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

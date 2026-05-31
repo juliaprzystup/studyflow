@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Postępy - StudyFlow{% endblock %}
+
+{% block content %}
+<section class="mb-4">
+    <div class="page-header mb-4">
+        <div>
+            <span class="badge text-bg-light px-3 py-2 mb-3">Progress Hub</span>
+            <h1 class="mb-2">Postępy i cele</h1>
+            <p class="mb-0">Monitoruj streak, cel tygodniowy i regularność nauki.</p>
+        </div>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">Powrót do dashboardu</a>
+    </div>
+</section>
+
+<section class="mb-4">
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                        <div>
+                            <h4 class="mb-1">Cel tygodniowy</h4>
+                            <p class="mb-0">Ustaw ile sesji nauki chcesz zrealizować w tym tygodniu.</p>
+                        </div>
+                        <form method="POST" class="d-flex align-items-center gap-2">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <label for="weekly_goal" class="form-label mb-0">Sesje / tydzień</label>
+                            <input id="weekly_goal" name="weekly_goal" type="number" class="form-control form-control-sm goal-input" min="1" max="50" value="{{ weekly_goal }}">
+                            <button type="submit" class="btn btn-sm btn-primary">Zapisz</button>
+                        </form>
+                    </div>
+
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-2">
+                        <span class="fw-semibold">{{ week_sessions_done }} / {{ weekly_goal }} sesji</span>
+                        <span class="small text-muted">{{ weekly_progress_percent }}% celu</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 10px;">
+                        <div class="progress-bar" role="progressbar" style="width: {{ weekly_progress_percent }}%"></div>
+                    </div>
+
+                    <div class="weekly-activity-grid">
+                        {% for day in weekly_activity %}
+                            <div class="activity-day {% if day.is_active %}is-active{% endif %}">
+                                <div class="activity-day-name">{{ day.day_label }}</div>
+                                <div class="activity-day-dot">{{ day.sessions }}</div>
+                                <div class="activity-day-date">{{ day.date_label }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <h4 class="mb-1">Aktualny streak</h4>
+                        <p class="mb-3">Liczba dni z rzędu, w których utrzymujesz aktywność.</p>
+                    </div>
+                    <div class="streak-value mb-2">{{ current_streak }} dni</div>
+                    <p class="mb-0 small">Każdy dzień nauki przybliża Cię do celu i buduje nawyk.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

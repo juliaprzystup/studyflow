@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Dodaj dokument - StudyFlow{% endblock %}
+
+{% block content %}
+<section class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="page-header mb-4">
+            <div>
+                <h1 class="mb-2">Dodaj dokument</h1>
+                <p class="mb-0">Wgraj dokument, a aplikacja przygotuje podsumowanie, quiz i fiszki.</p>
+            </div>
+            <a href="{{ url_for('notes_list') }}" class="btn btn-primary">Zobacz dokumenty</a>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-4 p-md-5">
+                <form method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Wybierz dokument</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".pdf,.txt,.doc,.docx" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Prześlij dokument</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-body p-4">
+            <h5 class="mb-3">Co stanie się po przesłaniu?</h5>
+            <ul class="mb-0">
+                <li>Dokument zostanie zapisany i przeanalizowany</li>
+                <li>Automatycznie wygenerujemy podsumowanie dokumentu</li>
+                <li>Będziesz mógł/mogła wygenerować quiz i fiszki</li>
+            </ul>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

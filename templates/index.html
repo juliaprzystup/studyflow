@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Strona główna - StudyFlow{% endblock %}
+
+{% block content %}
+<section class="landing-hero position-relative overflow-hidden mb-5">
+    <div class="landing-hero-glow"></div>
+    <div class="row align-items-center g-5">
+        <div class="col-lg-7">
+            <span class="badge text-bg-light px-3 py-2 mb-3 landing-badge">Nowoczesna platforma do nauki z dokumentów</span>
+            <h1 class="landing-hero-title mb-3">Twoje dokumenty przekształcone w wiedzę. W kilka sekund.</h1>
+            <p class="landing-hero-lead mb-4">
+                Ucz się efektywniej dzięki automatycznemu generowaniu notatek, inteligentnych fiszek SRS
+                i quizów bezpośrednio z Twoich plików PDF i DOCX.
+            </p>
+
+            <div class="d-flex flex-wrap gap-3 mb-4">
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg landing-hero-cta">
+                    Zarejestruj się za darmo
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg landing-hero-cta">
+                    Zaloguj się
+                </a>
+            </div>
+
+            <div class="landing-proof-list">
+                <span class="landing-proof-item"><i class="bi bi-file-earmark-text"></i> PDF, DOCX i TXT</span>
+                <span class="landing-proof-item"><i class="bi bi-lightning-charge"></i> Szybkie generowanie materiałów</span>
+                <span class="landing-proof-item"><i class="bi bi-stars"></i> Jeden workflow do nauki</span>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card landing-preview-card">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="landing-preview-top mb-4">
+                        <span class="badge-source">Przykładowy workflow</span>
+                    </div>
+
+                    <div class="landing-preview-step">
+                        <div class="landing-preview-icon">
+                            <i class="bi bi-upload"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1">Przesyłasz dokument</h5>
+                            <p class="mb-0">Dodajesz materiał z wykładu, skryptu lub prezentacji w jednym miejscu.</p>
+                        </div>
+                    </div>
+
+                    <div class="landing-preview-divider"></div>
+
+                    <div class="landing-preview-step">
+                        <div class="landing-preview-icon">
+                            <i class="bi bi-magic"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1">StudyFlow analizuje treść</h5>
+                            <p class="mb-0">System wyodrębnia najważniejsze informacje i buduje materiały do nauki.</p>
+                        </div>
+                    </div>
+
+                    <div class="landing-preview-divider"></div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-4">
+                            <div class="landing-preview-stat">
+                                <strong>Notatki</strong>
+                                <span>Najważniejsze wnioski</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="landing-preview-stat">
+                                <strong>Fiszki SRS</strong>
+                                <span>Powtórki we własnym tempie</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="landing-preview-stat">
+                                <strong>Quizy</strong>
+                                <span>Sprawdzenie wiedzy</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="features" class="landing-section mb-5">
+    <div class="text-center mx-auto landing-section-heading mb-5">
+        <span class="badge text-bg-light px-3 py-2 mb-3">Funkcje</span>
+        <h2 class="mb-3">Jak to działa?</h2>
+        <p class="mb-0">
+            Zamiast pustych ekranów i przypadkowych kliknięć, od razu widzisz, jakie korzyści daje platforma
+            i dlaczego warto założyć konto.
+        </p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card landing-feature-card h-100">
+                <div class="card-body p-4">
+                    <div class="landing-feature-icon mb-4">
+                        <i class="bi bi-journal-text"></i>
+                    </div>
+                    <h5 class="mb-3">Generator Notatek</h5>
+                    <p class="mb-0">
+                        Oszczędzaj czas: system automatycznie wyodrębnia kluczowe zdania i pojęcia naukowe,
+                        tworząc czytelne podsumowanie z całego dokumentu.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card landing-feature-card h-100">
+                <div class="card-body p-4">
+                    <div class="landing-feature-icon mb-4">
+                        <i class="bi bi-layers"></i>
+                    </div>
+                    <h5 class="mb-3">Inteligentne Fiszki</h5>
+                    <p class="mb-0">
+                        Ucz się aktywnie: z jednego pliku otrzymujesz gotową talię fiszek SRS, która pomaga
+                        wracać do trudnych zagadnień we właściwym momencie.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card landing-feature-card h-100">
+                <div class="card-body p-4">
+                    <div class="landing-feature-icon mb-4">
+                        <i class="bi bi-patch-question"></i>
+                    </div>
+                    <h5 class="mb-3">Quizy</h5>
+                    <p class="mb-0">
+                        Sprawdzaj zrozumienie materiału: aplikacja generuje pytania kontrolne na podstawie treści,
+                        dzięki czemu szybciej wykrywasz luki w wiedzy.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="about" class="landing-section mb-5">
+    <div class="card landing-about-card">
+        <div class="card-body p-4 p-lg-5">
+            <div class="row g-4 align-items-center">
+                <div class="col-lg-6">
+                    <span class="badge text-bg-light px-3 py-2 mb-3">O platformie</span>
+                    <h2 class="mb-3">StudyFlow porządkuje chaos przed nauką.</h2>
+                    <p class="mb-0">
+                        Projekt powstał po to, by zamienić rozproszone materiały w jeden prosty proces:
+                        wrzucasz dokument, a platforma przygotowuje Ci narzędzia do szybszego zapamiętywania
+                        i regularnych powtórek.
+                    </p>
+                </div>
+                <div class="col-lg-6">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="landing-about-point">
+                                <strong>Mniej klikania</strong>
+                                <span>Jedno miejsce do pracy z dokumentem od uploadu po naukę.</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="landing-about-point">
+                                <strong>Lepsza retencja</strong>
+                                <span>Fiszki SRS i quizy pomagają utrwalać wiedzę w praktyce.</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="landing-about-point">
+                                <strong>Profesjonalny workflow</strong>
+                                <span>Nowoczesny interfejs prowadzi krok po kroku.</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="landing-about-point">
+                                <strong>Szybki start</strong>
+                                <span>Zakładasz konto i od razu możesz zacząć pracę z materiałami.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="landing-bottom-cta">
+    <div class="card landing-cta-card">
+        <div class="card-body p-4 p-lg-5 text-center">
+            <span class="badge text-bg-light px-3 py-2 mb-3">Gotowi na start?</span>
+            <h2 class="mb-3">Gotowi na nową jakość nauki? Załóż konto i zacznij uczyć się mądrzej.</h2>
+            <p class="mb-4 mx-auto landing-cta-copy">
+                StudyFlow pomoże Ci szybciej przejść od surowych dokumentów do realnego zrozumienia materiału.
+            </p>
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg landing-bottom-button">
+                Rozpocznij naukę za darmo
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

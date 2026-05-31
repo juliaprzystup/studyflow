@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}StudyFlow{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+
+    <!-- Zapobiega "flash" białej strony przy ciemnym motywie -->
+    <script>
+        (function() {
+            var saved = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+        })();
+    </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg sticky-top app-navbar">
+        <div class="container py-2">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <span class="brand-mark">SF</span>
+                <span class="brand-name">StudyFlow</span>
+            </a>
+
+            <button class="navbar-toggler border-0" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Menu">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M3 5h14M3 10h14M3 15h14"
+                          stroke="currentColor" stroke-width="1.8"
+                          stroke-linecap="round"/>
+                </svg>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center gap-1">
+
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('progress') }}">Postępy</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('statistics') }}">Statystyki</a>
+                        </li>
+                        {% if current_user.is_admin %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Panel Admina</a>
+                            </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('flashcards_list') }}">Fiszki</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('quizzes_list') }}">Quizy</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('upload_file') }}">
+                                + Nowy dokument
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('logout') }}">Wyloguj</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            {% if request.endpoint == 'index' %}
+                                <a class="nav-link" href="#features">Funkcje</a>
+                            {% else %}
+                                <a class="nav-link" href="{{ url_for('index') }}#features">Funkcje</a>
+                            {% endif %}
+                        </li>
+                        <li class="nav-item">
+                            {% if request.endpoint == 'index' %}
+                                <a class="nav-link" href="#about">O platformie</a>
+                            {% else %}
+                                <a class="nav-link" href="{{ url_for('index') }}#about">O platformie</a>
+                            {% endif %}
+                        </li>
+                    {% endif %}
+
+                    <!-- Theme Toggle -->
+                    <li class="nav-item ms-2">
+                        <button id="theme-toggle" aria-label="Zmień motyw">
+                            <span class="toggle-icon" id="toggle-icon">🌙</span>
+                            <span id="toggle-label">Ciemny</span>
+                        </button>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="container py-5">
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-4 flash-messages">
+                    {% for category, message in messages %}
+                        {% set mapped_category = 'danger' if category in ['error', 'danger'] else category %}
+                        <div class="alert alert-{{ mapped_category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% if current_user.is_authenticated %}
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb custom-breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    {% if request.endpoint in ['notes_list', 'view_note', 'generate_quiz', 'generate_flashcards_route'] %}
+                        <li class="breadcrumb-item">
+                            {% if request.endpoint == 'notes_list' %}
+                                Dokumenty
+                            {% else %}
+                                <a href="{{ url_for('notes_list') }}">Dokumenty</a>
+                            {% endif %}
+                        </li>
+                        {% if request.endpoint == 'view_note' and note is defined %}
+                            <li class="breadcrumb-item active" aria-current="page">{{ note.title }}</li>
+                        {% endif %}
+                    {% elif request.endpoint in ['quizzes_list', 'take_quiz'] %}
+                        <li class="breadcrumb-item">
+                            {% if request.endpoint == 'quizzes_list' %}
+                                Quizy
+                            {% else %}
+                                <a href="{{ url_for('quizzes_list') }}">Quizy</a>
+                            {% endif %}
+                        </li>
+                        {% if request.endpoint == 'take_quiz' and quiz is defined %}
+                            <li class="breadcrumb-item active" aria-current="page">{{ quiz.document.title }}</li>
+                        {% endif %}
+                    {% elif request.endpoint == 'statistics' %}
+                        <li class="breadcrumb-item active" aria-current="page">Statystyki</li>
+                    {% elif request.endpoint == 'admin_dashboard' %}
+                        <li class="breadcrumb-item active" aria-current="page">Panel admina</li>
+                    {% elif request.endpoint == 'progress' %}
+                        <li class="breadcrumb-item active" aria-current="page">Postępy</li>
+                    {% elif request.endpoint in ['flashcards_list', 'study_flashcards', 'study_flashcards_deck'] %}
+                        <li class="breadcrumb-item">
+                            {% if request.endpoint == 'flashcards_list' %}
+                                Talie fiszek
+                            {% else %}
+                                <a href="{{ url_for('flashcards_list') }}">Talie fiszek</a>
+                            {% endif %}
+                        </li>
+                        {% if request.endpoint == 'study_flashcards_deck' and document is defined %}
+                            <li class="breadcrumb-item">
+                                <a href="{{ url_for('view_note', note_id=document.id) }}">{{ document.title }}</a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">Sesja nauki</li>
+                        {% endif %}
+                    {% elif request.endpoint == 'upload_file' %}
+                        <li class="breadcrumb-item active" aria-current="page">Nowy dokument</li>
+                    {% endif %}
+                </ol>
+            </nav>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ── Theme toggle ──────────────────────────────────────
+        const html        = document.documentElement;
+        const btn         = document.getElementById('theme-toggle');
+        const icon        = document.getElementById('toggle-icon');
+        const label       = document.getElementById('toggle-label');
+
+        function applyTheme(theme) {
+            html.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+
+            if (theme === 'dark') {
+                icon.textContent  = '☀️';
+                label.textContent = 'Jasny';
+            } else {
+                icon.textContent  = '🌙';
+                label.textContent = 'Ciemny';
+            }
+        }
+
+        // Ustaw poprawny stan przycisku na starcie (motyw już ustawiony przez inline script w <head>)
+        applyTheme(localStorage.getItem('theme') || 'light');
+
+        btn.addEventListener('click', function () {
+            const current = html.getAttribute('data-theme');
+            applyTheme(current === 'dark' ? 'light' : 'dark');
+        });
+
+        // Auto-dismiss flash messages after 4s
+        setTimeout(() => {
+            document.querySelectorAll('.flash-messages .alert').forEach((alertEl) => {
+                const bsAlert = bootstrap.Alert.getOrCreateInstance(alertEl);
+                bsAlert.close();
+            });
+        }, 4000);
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

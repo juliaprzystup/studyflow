@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - StudyFlow{% endblock %}
+
+{% block content %}
+<section class="mb-4">
+    <div class="page-header mb-4">
+        <div>
+            <span class="badge text-bg-light px-3 py-2 mb-3">Panel nauki</span>
+            <h1 class="mb-2 dashboard-welcome-title">Miło Cię widzieć, {{ current_user.email.split('@')[0] }}</h1>
+            <p class="mb-0">Tu znajdziesz szybki podgląd postępów i skróty do najważniejszych akcji.</p>
+        </div>
+        <div class="d-flex gap-3">
+            <a href="{{ url_for('upload_file') }}" class="btn btn-primary">Dodaj dokument</a>
+            <a href="{{ url_for('quizzes_list') }}" class="btn btn-outline-primary">Rozwiąż quiz</a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-4">
+            <a href="{{ url_for('notes_list') }}" class="text-decoration-none">
+                <div class="card card-interactive h-100">
+                    <div class="card-body p-4">
+                        <p class="text-uppercase small fw-semibold mb-2">Dokumenty</p>
+                        <p class="metric-value mb-2">{{ notes_count }}</p>
+                        <p class="mb-0">Przeglądaj notatki i wygenerowane materiały.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-4">
+            <a href="{{ url_for('flashcards_list') }}" class="text-decoration-none">
+                <div class="card card-interactive h-100">
+                    <div class="card-body p-4">
+                        <p class="text-uppercase small fw-semibold mb-2">Fiszki</p>
+                        <p class="metric-value mb-2">{{ flashcards_count }}</p>
+                        <p class="mb-0">Przejdź do swojej talii i rozpocznij naukę.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-4">
+            <a href="{{ url_for('quizzes_list') }}" class="text-decoration-none">
+                <div class="card card-interactive h-100">
+                    <div class="card-body p-4">
+                        <p class="text-uppercase small fw-semibold mb-2">Quizy</p>
+                        <p class="metric-value mb-2">{{ quizzes_count }}</p>
+                        <p class="mb-0">Sprawdź gotowe testy i mierz skuteczność.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="card recommendation-widget">
+        <div class="card-body p-4 p-md-5">
+            <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+                <div>
+                    <span class="badge px-3 py-2 recommendation-badge mb-3">Rekomendacja dnia</span>
+                    <h4 class="mb-2">Twój następny krok</h4>
+                    <p class="mb-0">{{ recommendation }}</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('study_flashcards') }}" class="btn btn-primary">Zacznij sesję</a>
+                    <a href="{{ url_for('progress') }}" class="btn btn-outline-primary">Zobacz postępy</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

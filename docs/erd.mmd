@@ -1,0 +1,46 @@
+%% ERD wygenerowany z SQLAlchemy metadata (models/__init__.py via app)
+erDiagram
+    flashcards {
+        int id PK
+        varchar question
+        text answer
+        datetime created_at
+        int user_id FK
+    }
+    notes {
+        int id PK
+        varchar title
+        text content
+        text summary
+        varchar original_file
+        datetime created_at
+        int user_id FK
+    }
+    quiz_attempts {
+        int id PK
+        int score
+        int total_questions
+        datetime created_at
+        int user_id FK
+        int quiz_id FK
+    }
+    quizzes {
+        int id PK
+        varchar title
+        text questions
+        datetime created_at
+        int user_id FK
+    }
+    users {
+        int id PK
+        varchar username
+        varchar email
+        varchar password_hash
+        boolean is_admin
+        datetime created_at
+    }
+    users ||--o{ flashcards : has
+    users ||--o{ notes : has
+    users ||--o{ quiz_attempts : has
+    quizzes ||--o{ quiz_attempts : has
+    users ||--o{ quizzes : has

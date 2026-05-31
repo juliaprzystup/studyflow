@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Rejestracja - StudyFlow{% endblock %}
+
+{% block content %}
+<section class="row justify-content-center">
+    <div class="col-lg-6 col-xl-5">
+        <div class="page-header mb-4">
+            <div>
+                <span class="badge text-bg-light px-3 py-2 mb-3">Start now</span>
+                <h1 class="mb-2">Rejestracja</h1>
+                <p class="mb-0">Utwórz konto i zacznij naukę z dokumentami.</p>
+            </div>
+            <a href="{{ url_for('login') }}" class="btn btn-primary">Mam już konto</a>
+        </div>
+        <div class="card">
+            <div class="card-body p-4 p-md-5">
+                <form method="POST" action="{{ url_for('register') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Hasło</label>
+                        <input type="password"
+                               class="form-control"
+                               id="password"
+                               name="password"
+                               required
+                               minlength="8"
+                               pattern="^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$"
+                               title="Hasło musi mieć co najmniej 8 znaków, zawierać wielką literę, cyfrę i znak specjalny.">
+                        <div class="form-text text-muted">Hasło: min. 8 znaków + wielka litera + cyfra + znak specjalny.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password2" class="form-label">Powtórz hasło</label>
+                        <input type="password"
+                               class="form-control"
+                               id="password2"
+                               name="password2"
+                               required
+                               minlength="8"
+                               pattern="^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$"
+                               title="Hasło musi mieć co najmniej 8 znaków, zawierać wielką literę, cyfrę i znak specjalny.">
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Zarejestruj się</button>
+                    </div>
+                </form>
+                <hr class="my-4">
+                <p class="text-center mb-0">Masz już konto? <a href="{{ url_for('login') }}">Zaloguj się</a></p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

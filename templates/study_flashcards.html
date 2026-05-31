@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+
+{% block title %}Nauka: {{ document.title if document is defined else 'Fiszki' }} - StudyFlow{% endblock %}
+
+{% block content %}
+<style>
+    .flashcard-scene {
+        perspective: 1000px;
+        width: 100%;
+        max-width: 600px;
+        height: 350px;
+        margin: 0 auto;
+    }
+
+    .flashcard-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        transition: transform 0.6s ease-in-out;
+        transform-style: preserve-3d;
+        cursor: pointer;
+    }
+
+    .flashcard-inner.is-flipped {
+        transform: rotateY(180deg);
+    }
+
+    .flashcard-front, .flashcard-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: var(--shadow-md);
+        background-color: var(--card-bg);
+        color: var(--text-primary);
+        transition: background-color var(--transition), color var(--transition), box-shadow var(--transition);
+    }
+
+    .flashcard-front {
+        border: 2px solid var(--accent);
+    }
+
+    .flashcard-back {
+        transform: rotateY(180deg);
+        background-color: var(--accent-subtle);
+        border: 2px solid #22c55e;
+    }
+
+    .flashcard-front h5 { color: var(--accent); }
+    .flashcard-back  h5 { color: #22c55e; }
+
+    .hint-text {
+        position: absolute;
+        bottom: 15px;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .card-hidden { display: none !important; }
+
+    .btn-speak {
+        border-radius: 50px;
+        padding: 5px 15px;
+        font-size: 0.9rem;
+        margin-top: 15px;
+        z-index: 10;
+    }
+
+    /* Pomodoro */
+    .pomodoro-card {
+        max-width: 600px;
+        margin: 0 auto 30px auto;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        background-color: var(--bg-2);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        transition: background-color var(--transition), border-color var(--transition);
+    }
+
+    .pomodoro-progress-container {
+        height: 4px;
+        background-color: var(--bg-3);
+        width: 100%;
+    }
+
+    .pomodoro-progress-bar {
+        height: 100%;
+        width: 0%;
+        transition: width 1s linear, background-color 0.5s ease;
+    }
+
+    /* Przyciski oceny */
+    #evaluation-buttons .btn {
+        min-width: 180px;
+    }
+
+    /* Komunikat końcowy */
+    #finish-message {
+        padding: 3rem 1rem;
+    }
+    #finish-message h3 {
+        color: #22c55e;
+    }
+</style>
+
+<div class="row mt-4">
+    <div class="col-md-12 text-center">
+        <div class="page-header">
+            <div class="text-start">
+                {% if document is defined %}
+                    <span class="badge text-bg-light px-3 py-2 mb-2">📚 Talia: {{ document.title }}</span>
+                {% endif %}
+                <h1>Tryb nauki aktywnej</h1>
+                <p class="text-muted">Kliknij fiszkę, aby zobaczyć odpowiedź i oceń stopień opanowania treści.</p>
+            </div>
+            {% if document is defined %}
+                <a href="{{ url_for('view_note', note_id=document.id) }}" class="btn btn-primary">Powrót do dokumentu</a>
+            {% else %}
+                <a href="{{ url_for('flashcards_list') }}" class="btn btn-primary">Powrót do talii</a>
+            {% endif %}
+        </div>
+
+        <div class="d-flex justify-content-center align-items-center mb-4 gap-3">
+            {% if document is defined %}
+                <a href="{{ url_for('view_note', note_id=document.id) }}" class="btn btn-secondary btn-sm">Przerwij naukę</a>
+            {% else %}
+                <a href="{{ url_for('flashcards_list') }}" class="btn btn-secondary btn-sm">Przerwij naukę</a>
+            {% endif %}
+            <select id="voice-select" class="form-select form-select-sm w-auto">
+                <option value="">Wczytywanie głosów...</option>
+            </select>
+        </div>
+
+        <!-- Pomodoro -->
+        <div class="pomodoro-card">
+            <div class="p-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="fs-4" id="pomodoro-icon">🍅</span>
+                    <span class="fs-4 fw-bold" id="pomodoro-time"
+                          style="font-family: 'DM Serif Display', serif; color: var(--text-primary);">25:00</span>
+                    <span class="badge bg-danger" id="pomodoro-mode">Nauka</span>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-outline-success btn-sm" id="btn-pomodoro-start" onclick="startPomodoro()">▶ Start</button>
+                    <button class="btn btn-outline-warning btn-sm card-hidden" id="btn-pomodoro-pause" onclick="pausePomodoro()">⏸ Pauza</button>
+                    <button class="btn btn-secondary btn-sm" onclick="resetPomodoro()">↺ Reset</button>
+                </div>
+            </div>
+            <div class="pomodoro-progress-container">
+                <div class="pomodoro-progress-bar bg-danger" id="pomodoro-progress"></div>
+            </div>
+        </div>
+
+        <!-- Licznik -->
+        <h5 class="mb-4" style="color: var(--text-secondary);" id="progress-counter">Ładowanie talii...</h5>
+
+        <!-- Fiszki -->
+        <div id="flashcards-container">
+            {% for card in flashcards %}
+            <div class="flashcard-scene card-hidden"
+                 id="card-{{ loop.index0 }}"
+                 data-card-id="{{ card.id }}">
+                <div class="flashcard-inner" onclick="flipCard(this)">
+
+                    <div class="flashcard-front">
+                        <h5 class="mb-3">Pytanie</h5>
+                        <h3>{{ card.question }}</h3>
+                        <button class="btn btn-outline-primary btn-speak"
+                                onclick="speakText('{{ card.question }}', event)">
+                            🔊 Przeczytaj
+                        </button>
+                        <span class="hint-text">👆 Kliknij kartę, aby odwrócić</span>
+                    </div>
+
+                    <div class="flashcard-back">
+                        <h5 class="mb-3">Odpowiedź</h5>
+                        <h4>{{ card.answer }}</h4>
+                        <button class="btn btn-outline-success btn-speak"
+                                onclick="speakText('{{ card.answer }}', event)">
+                            🔊 Przeczytaj
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Przyciski oceny -->
+        <div id="evaluation-buttons" class="mt-4 card-hidden">
+            <p style="color: var(--text-muted); margin-bottom: 0.5rem;">Jak Ci poszło?</p>
+            <button id="btn-repeat" class="btn btn-danger btn-lg me-3" onclick="markRepeat()">🔴 Muszę powtórzyć</button>
+            <button id="btn-known" class="btn btn-success btn-lg" onclick="markKnown()">🟢 Znam to!</button>
+        </div>
+
+        <!-- Komunikat końcowy -->
+        <div id="finish-message" class="card-hidden mt-5">
+            <h3>🎉 Gratulacje! Opanowałaś całą talię.</h3>
+            <p style="color: var(--text-muted);">Wszystkie trudne fiszki zostały powtórzone i zaliczone.</p>
+            {% if document is defined %}
+                <a href="{{ url_for('study_flashcards_deck', document_id=document.id) }}" class="btn btn-primary mt-3">Przećwicz ponownie</a>
+                <a href="{{ url_for('view_note', note_id=document.id) }}" class="btn btn-secondary mt-3">Wróć do dokumentu</a>
+            {% else %}
+                <a href="{{ url_for('flashcards_list') }}" class="btn btn-secondary mt-3">Wróć do talii</a>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ── POMODORO ──────────────────────────────────────────────
+    const STUDY_TIME = 25 * 60;
+    const BREAK_TIME = 5 * 60;
+
+    let pomodoroInterval;
+    let isStudyMode = true;
+    let timeLeft = STUDY_TIME;
+    let isRunning = false;
+
+    function playChime() {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 1.5);
+        osc.start();
+        osc.stop(ctx.currentTime + 1.5);
+    }
+
+    function updatePomodoroUI() {
+        const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+        const seconds = (timeLeft % 60).toString().padStart(2, '0');
+        document.getElementById('pomodoro-time').innerText = `${minutes}:${seconds}`;
+
+        const totalTime = isStudyMode ? STUDY_TIME : BREAK_TIME;
+        const percent = ((totalTime - timeLeft) / totalTime) * 100;
+        document.getElementById('pomodoro-progress').style.width = `${percent}%`;
+
+        const modeBadge   = document.getElementById('pomodoro-mode');
+        const progressBar = document.getElementById('pomodoro-progress');
+        const icon        = document.getElementById('pomodoro-icon');
+
+        if (isStudyMode) {
+            modeBadge.innerText   = 'Nauka';
+            modeBadge.className   = 'badge bg-danger';
+            progressBar.className = 'pomodoro-progress-bar bg-danger';
+            icon.innerText        = '🍅';
+        } else {
+            modeBadge.innerText   = 'Przerwa';
+            modeBadge.className   = 'badge bg-success';
+            progressBar.className = 'pomodoro-progress-bar bg-success';
+            icon.innerText        = '☕';
+        }
+    }
+
+    function startPomodoro() {
+        if (isRunning) return;
+        isRunning = true;
+        document.getElementById('btn-pomodoro-start').classList.add('card-hidden');
+        document.getElementById('btn-pomodoro-pause').classList.remove('card-hidden');
+
+        pomodoroInterval = setInterval(() => {
+            timeLeft--;
+            updatePomodoroUI();
+
+            if (timeLeft <= 0) {
+                clearInterval(pomodoroInterval);
+                playChime();
+                isStudyMode = !isStudyMode;
+                timeLeft    = isStudyMode ? STUDY_TIME : BREAK_TIME;
+                isRunning   = false;
+                updatePomodoroUI();
+                document.getElementById('btn-pomodoro-start').classList.remove('card-hidden');
+                document.getElementById('btn-pomodoro-pause').classList.add('card-hidden');
+                alert(isStudyMode ? 'Koniec przerwy! Wracamy do nauki 🍅' : 'Świetna robota! Czas na 5 minut przerwy ☕');
+            }
+        }, 1000);
+    }
+
+    function pausePomodoro() {
+        clearInterval(pomodoroInterval);
+        isRunning = false;
+        document.getElementById('btn-pomodoro-start').classList.remove('card-hidden');
+        document.getElementById('btn-pomodoro-pause').classList.add('card-hidden');
+    }
+
+    function resetPomodoro() {
+        clearInterval(pomodoroInterval);
+        isRunning = false;
+        timeLeft  = isStudyMode ? STUDY_TIME : BREAK_TIME;
+        updatePomodoroUI();
+        document.getElementById('btn-pomodoro-start').classList.remove('card-hidden');
+        document.getElementById('btn-pomodoro-pause').classList.add('card-hidden');
+    }
+
+    // ── LEKTOR ────────────────────────────────────────────────
+    let availableVoices = [];
+    const voiceSelect = document.getElementById('voice-select');
+
+    function populateVoiceList() {
+        availableVoices = window.speechSynthesis.getVoices();
+        const polishVoices = availableVoices.filter(v => v.lang.includes('pl'));
+        voiceSelect.innerHTML = '';
+
+        if (polishVoices.length === 0) {
+            voiceSelect.innerHTML = '<option>Brak polskiego głosu</option>';
+            return;
+        }
+        polishVoices.forEach(voice => {
+            const opt = document.createElement('option');
+            opt.textContent = voice.name + (voice.name.includes('Google') ? ' ☁️' : '');
+            opt.value = voice.name;
+            voiceSelect.appendChild(opt);
+        });
+    }
+
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = populateVoiceList;
+    }
+    populateVoiceList();
+
+    function speakText(text, event) {
+        event.stopPropagation();
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang  = 'pl-PL';
+        const selectedVoice = voiceSelect.value;
+        if (selectedVoice) {
+            utterance.voice = availableVoices.find(v => v.name === selectedVoice);
+        }
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // ── FISZKI (SPACED REPETITION) ────────────────────────────
+    const initialCardCount = parseInt("{{ flashcards|length }}", 10) || 0;
+    let queue = Array.from({ length: initialCardCount }, (_, i) => i);
+    let currentQueuePosition = 0;
+
+    function updateView() {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        document.querySelectorAll('.flashcard-scene').forEach(el => el.classList.add('card-hidden'));
+        document.getElementById('evaluation-buttons').classList.add('card-hidden');
+
+        if (currentQueuePosition < queue.length) {
+            const activeCardId = queue[currentQueuePosition];
+            const activeCard   = document.getElementById('card-' + activeCardId);
+            activeCard.classList.remove('card-hidden');
+            activeCard.querySelector('.flashcard-inner').classList.remove('is-flipped');
+            document.getElementById('progress-counter').innerText =
+                'Fiszka ' + (currentQueuePosition + 1) + ' z ' + queue.length;
+        } else {
+            document.getElementById('flashcards-container').classList.add('card-hidden');
+            document.getElementById('progress-counter').classList.add('card-hidden');
+            document.getElementById('finish-message').classList.remove('card-hidden');
+            pausePomodoro();
+        }
+    }
+
+    function flipCard(cardInnerElement) {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        if (!cardInnerElement.classList.contains('is-flipped')) {
+            cardInnerElement.classList.add('is-flipped');
+            document.getElementById('evaluation-buttons').classList.remove('card-hidden');
+        }
+    }
+
+    // ── SM-2: aktualizacja po stronie serwera ────────────────
+    // Mapowanie 2-przyciskowe → quality SM-2:
+    //   "Znam to!"        → 5 (poprawnie, łatwe)
+    //   "Muszę powtórzyć" → 2 (błąd, ale znajome)
+    const QUALITY_KNOWN  = 5;
+    const QUALITY_REPEAT = 2;
+
+    function getCurrentCardId() {
+        const idx = queue[currentQueuePosition];
+        if (idx === undefined) return null;
+        const cardEl = document.getElementById('card-' + idx);
+        return cardEl ? cardEl.dataset.cardId : null;
+    }
+
+    async function postReview(cardId, quality) {
+        if (!cardId) return;
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            await fetch('/update_flashcard/' + cardId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken || ''
+                },
+                body: JSON.stringify({ quality })
+            });
+        } catch (err) {
+            console.warn('Nie udało się zapisać postępu fiszki:', err);
+        }
+    }
+
+    function setEvaluationDisabled(disabled) {
+        document.getElementById('btn-known').disabled  = disabled;
+        document.getElementById('btn-repeat').disabled = disabled;
+    }
+
+    async function handleReview(quality, repeatInSession) {
+        const cardId = getCurrentCardId();
+        setEvaluationDisabled(true);
+
+        await postReview(cardId, quality);
+
+        if (repeatInSession) {
+            queue.push(queue[currentQueuePosition]);
+        }
+        currentQueuePosition++;
+
+        setEvaluationDisabled(false);
+        updateView();
+    }
+
+    function markKnown() {
+        // Sukces: wypadnie z bieżącej kolejki, w bazie interwał rośnie
+        handleReview(QUALITY_KNOWN, /* repeatInSession */ false);
+    }
+
+    function markRepeat() {
+        // Błąd: powtarzamy w tej samej sesji + reset interwału w bazie do 1 dnia
+        handleReview(QUALITY_REPEAT, /* repeatInSession */ true);
+    }
+
+    // Start
+    updateView();
+    updatePomodoroUI();
+</script>
+{% endblock %}

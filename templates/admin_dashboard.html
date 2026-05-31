@@ -1,0 +1,426 @@
+{% extends "base.html" %}
+
+{% block title %}Panel Administratora - StudyFlow{% endblock %}
+
+{% block content %}
+<section class="mb-4">
+    <div class="card admin-hero">
+        <div class="card-body p-4 p-lg-5">
+            <div class="page-header align-items-center">
+                <div>
+                    <span class="badge text-bg-light px-3 py-2 mb-3">Admin Console</span>
+                    <h1 class="mb-2">Panel Administratora</h1>
+                    <p class="mb-0">
+                        Centralne miejsce do zarządzania użytkownikami, dokumentami i porządkiem
+                        w całym systemie StudyFlow.
+                    </p>
+                </div>
+                <div class="admin-hero-side">
+                    <span class="badge badge-source px-3 py-2">
+                        Dostęp tylko dla administratorów
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-4">
+    <div class="row g-4">
+        <div class="col-md-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <p class="text-uppercase small fw-semibold mb-2">Wszyscy użytkownicy</p>
+                    <p class="metric-value mb-0">{{ stats.total_users }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <p class="text-uppercase small fw-semibold mb-2">Dokumenty w systemie</p>
+                    <p class="metric-value mb-0">{{ stats.total_documents }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <p class="text-uppercase small fw-semibold mb-2">Wygenerowane zasoby</p>
+                    <p class="metric-value mb-0">{{ stats.total_learning_assets }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <p class="text-uppercase small fw-semibold mb-2">Nowi użytkownicy 7 dni</p>
+                    <p class="metric-value mb-0">{{ stats.new_users_last_7_days }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <p class="text-uppercase small fw-semibold mb-2">Administratorzy</p>
+                    <p class="metric-value mb-0">{{ stats.admin_users }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <p class="text-uppercase small fw-semibold mb-2">Aktywni twórcy</p>
+                    <p class="metric-value mb-0">{{ stats.users_with_documents }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <p class="text-uppercase small fw-semibold mb-2">Uploady 7 dni</p>
+                    <p class="metric-value mb-0">{{ stats.uploads_last_7_days }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <p class="text-uppercase small fw-semibold mb-2">Śr. dokumentów / user</p>
+                    <p class="metric-value mb-0">{{ stats.avg_documents_per_user }}</p>
+                    <div class="admin-metric-inline mt-3">
+                        <span class="badge badge-source"><i class="bi bi-card-text"></i> {{ stats.total_summaries }}</span>
+                        <span class="badge badge-source"><i class="bi bi-layers"></i> {{ stats.total_flashcards }}</span>
+                        <span class="badge badge-source"><i class="bi bi-patch-question"></i> {{ stats.total_quizzes }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="card hub-card">
+        <div class="card-header p-0 border-0">
+            <ul class="nav nav-tabs hub-tabs px-3 pt-3" id="adminTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if active_tab == 'users' %}active{% endif %}"
+                            id="users-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#users-pane"
+                            type="button"
+                            role="tab"
+                            aria-controls="users-pane"
+                            aria-selected="{{ 'true' if active_tab == 'users' else 'false' }}">
+                        Użytkownicy
+                        <span class="hub-tab-count">{{ users|length }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if active_tab == 'documents' %}active{% endif %}"
+                            id="documents-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#documents-pane"
+                            type="button"
+                            role="tab"
+                            aria-controls="documents-pane"
+                            aria-selected="{{ 'true' if active_tab == 'documents' else 'false' }}">
+                        Wszystkie dokumenty
+                        <span class="hub-tab-count">{{ documents|length }}</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="tab-content">
+                <div class="tab-pane fade {% if active_tab == 'users' %}show active{% endif %}" id="users-pane" role="tabpanel" aria-labelledby="users-tab" tabindex="0">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 p-4 pb-0">
+                        <div>
+                            <h4 class="mb-1">Zarządzanie kontami</h4>
+                            <p class="mb-0">Przegląd użytkowników wraz z ich rolą, liczbą dokumentów i datą rejestracji.</p>
+                        </div>
+                        <span class="badge surface-muted text-dark px-3 py-2">{{ users|length }} wyników</span>
+                    </div>
+
+                    <div class="px-4 pt-4">
+                        <form method="GET" class="admin-toolbar">
+                            <input type="hidden" name="tab" value="users">
+                            <input type="hidden" name="doc_q" value="{{ filters.doc_query }}">
+                            <input type="hidden" name="doc_sort" value="{{ filters.doc_sort }}">
+
+                            <div class="admin-toolbar-group">
+                                <label for="user_q" class="form-label mb-2">Szukaj użytkownika</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text"
+                                           id="user_q"
+                                           name="user_q"
+                                           class="form-control"
+                                           value="{{ filters.user_query }}"
+                                           placeholder="Email, domena, fragment nazwy">
+                                </div>
+                            </div>
+
+                            <div class="admin-toolbar-group">
+                                <label for="user_role" class="form-label mb-2">Rola</label>
+                                <select id="user_role" name="user_role" class="form-select">
+                                    <option value="all" {% if filters.user_role == 'all' %}selected{% endif %}>Wszyscy</option>
+                                    <option value="admins" {% if filters.user_role == 'admins' %}selected{% endif %}>Administratorzy</option>
+                                    <option value="members" {% if filters.user_role == 'members' %}selected{% endif %}>Użytkownicy</option>
+                                </select>
+                            </div>
+
+                            <div class="admin-toolbar-group">
+                                <label for="user_sort" class="form-label mb-2">Sortowanie</label>
+                                <select id="user_sort" name="user_sort" class="form-select">
+                                    <option value="admins_first" {% if filters.user_sort == 'admins_first' %}selected{% endif %}>Admini najpierw</option>
+                                    <option value="recent" {% if filters.user_sort == 'recent' %}selected{% endif %}>Najnowsza rejestracja</option>
+                                    <option value="oldest" {% if filters.user_sort == 'oldest' %}selected{% endif %}>Najstarsza rejestracja</option>
+                                    <option value="documents_desc" {% if filters.user_sort == 'documents_desc' %}selected{% endif %}>Najwięcej dokumentów</option>
+                                    <option value="documents_asc" {% if filters.user_sort == 'documents_asc' %}selected{% endif %}>Najmniej dokumentów</option>
+                                    <option value="email_asc" {% if filters.user_sort == 'email_asc' %}selected{% endif %}>Email A-Z</option>
+                                </select>
+                            </div>
+
+                            <div class="admin-toolbar-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-funnel me-1"></i>
+                                    Filtruj
+                                </button>
+                                <a href="{{ url_for('admin_dashboard', tab='users') }}" class="btn btn-outline-secondary">Reset</a>
+                            </div>
+                        </form>
+                    </div>
+
+                    {% if users %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Użytkownik</th>
+                                        <th>Rola</th>
+                                        <th>Data rejestracji</th>
+                                        <th>Dokumenty</th>
+                                        <th class="text-end pe-4">Akcje</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                        <tr>
+                                            <td class="ps-4">
+                                                <div class="fw-semibold text-dark">{{ user.email }}</div>
+                                                <small class="text-muted">ID: {{ user.id }}</small>
+                                            </td>
+                                            <td>
+                                                {% if user.is_admin %}
+                                                    <span class="badge badge-source">
+                                                        <i class="bi bi-shield-lock"></i>
+                                                        Admin
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge badge-source">
+                                                        <i class="bi bi-person"></i>
+                                                        Student
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ user.registered_at.strftime('%d.%m.%Y %H:%M') if user.registered_at else '-' }}</td>
+                                            <td><strong>{{ user.documents_count }}</strong> dokumentów</td>
+                                            <td class="text-end pe-4">
+                                                {% if user.id == current_user.id %}
+                                                    <div class="admin-actions justify-content-end">
+                                                        <button type="button" class="btn btn-sm btn-outline-admin" disabled>
+                                                            <i class="bi bi-person-lock me-1"></i>
+                                                            Twoje konto
+                                                        </button>
+                                                    </div>
+                                                {% elif user.is_admin and stats.admin_users <= 1 %}
+                                                    <div class="admin-actions justify-content-end">
+                                                        <button type="button" class="btn btn-sm btn-outline-admin" disabled>
+                                                            <i class="bi bi-shield-exclamation me-1"></i>
+                                                            Ostatni admin
+                                                        </button>
+                                                    </div>
+                                                {% else %}
+                                                    <div class="admin-actions justify-content-end">
+                                                        <form action="{{ url_for('admin_toggle_admin', user_id=user.id) }}" method="POST" class="d-inline">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                            <input type="hidden" name="tab" value="users">
+                                                            <input type="hidden" name="user_q" value="{{ filters.user_query }}">
+                                                            <input type="hidden" name="user_role" value="{{ filters.user_role }}">
+                                                            <input type="hidden" name="user_sort" value="{{ filters.user_sort }}">
+                                                            <input type="hidden" name="doc_q" value="{{ filters.doc_query }}">
+                                                            <input type="hidden" name="doc_sort" value="{{ filters.doc_sort }}">
+                                                            <button type="submit"
+                                                                    class="btn btn-sm btn-outline-admin"
+                                                                    onclick="return confirm('{% if user.is_admin %}Czy na pewno chcesz odebrać uprawnienia administratora temu użytkownikowi?{% else %}Czy na pewno chcesz nadać uprawnienia administratora temu użytkownikowi?{% endif %}');">
+                                                                <i class="bi {% if user.is_admin %}bi-shield-minus{% else %}bi-shield-plus{% endif %} me-1"></i>
+                                                                {% if user.is_admin %}Odbierz uprawnienia{% else %}Nadaj uprawnienia{% endif %}
+                                                            </button>
+                                                        </form>
+                                                        <form action="{{ url_for('admin_delete_user', user_id=user.id) }}" method="POST" class="d-inline">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                            <input type="hidden" name="tab" value="users">
+                                                            <input type="hidden" name="user_q" value="{{ filters.user_query }}">
+                                                            <input type="hidden" name="user_role" value="{{ filters.user_role }}">
+                                                            <input type="hidden" name="user_sort" value="{{ filters.user_sort }}">
+                                                            <input type="hidden" name="doc_q" value="{{ filters.doc_query }}">
+                                                            <input type="hidden" name="doc_sort" value="{{ filters.doc_sort }}">
+                                                            <button type="submit"
+                                                                    class="btn btn-sm btn-outline-danger"
+                                                                    onclick="return confirm('Czy na pewno chcesz usunąć tego użytkownika wraz z jego dokumentami i danymi?');">
+                                                                <i class="bi bi-trash3 me-1"></i>
+                                                                Usuń
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="p-5 text-center empty-state">
+                            <i class="bi bi-people fs-1 mb-3 d-block"></i>
+                            <h5 class="mb-2">Brak użytkowników dla tego filtra</h5>
+                            <p class="mb-0">Zmień kryteria wyszukiwania lub zresetuj filtry, aby zobaczyć pełną listę.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="tab-pane fade {% if active_tab == 'documents' %}show active{% endif %}" id="documents-pane" role="tabpanel" aria-labelledby="documents-tab" tabindex="0">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 p-4 pb-0">
+                        <div>
+                            <h4 class="mb-1">Dokumenty całego systemu</h4>
+                            <p class="mb-0">Podgląd wszystkich materiałów oraz wygenerowanych zasobów nauki.</p>
+                        </div>
+                        <span class="badge surface-muted text-dark px-3 py-2">{{ documents|length }} wyników</span>
+                    </div>
+
+                    <div class="px-4 pt-4">
+                        <form method="GET" class="admin-toolbar">
+                            <input type="hidden" name="tab" value="documents">
+                            <input type="hidden" name="user_q" value="{{ filters.user_query }}">
+                            <input type="hidden" name="user_role" value="{{ filters.user_role }}">
+                            <input type="hidden" name="user_sort" value="{{ filters.user_sort }}">
+
+                            <div class="admin-toolbar-group">
+                                <label for="doc_q" class="form-label mb-2">Szukaj dokumentu</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text"
+                                           id="doc_q"
+                                           name="doc_q"
+                                           class="form-control"
+                                           value="{{ filters.doc_query }}"
+                                           placeholder="Tytuł dokumentu lub email właściciela">
+                                </div>
+                            </div>
+
+                            <div class="admin-toolbar-group">
+                                <label for="doc_sort" class="form-label mb-2">Sortowanie</label>
+                                <select id="doc_sort" name="doc_sort" class="form-select">
+                                    <option value="recent" {% if filters.doc_sort == 'recent' %}selected{% endif %}>Najnowsze dokumenty</option>
+                                    <option value="oldest" {% if filters.doc_sort == 'oldest' %}selected{% endif %}>Najstarsze dokumenty</option>
+                                    <option value="title_asc" {% if filters.doc_sort == 'title_asc' %}selected{% endif %}>Tytuł A-Z</option>
+                                    <option value="owner_asc" {% if filters.doc_sort == 'owner_asc' %}selected{% endif %}>Właściciel A-Z</option>
+                                    <option value="flashcards_desc" {% if filters.doc_sort == 'flashcards_desc' %}selected{% endif %}>Najwięcej fiszek</option>
+                                    <option value="quizzes_desc" {% if filters.doc_sort == 'quizzes_desc' %}selected{% endif %}>Najwięcej quizów</option>
+                                </select>
+                            </div>
+
+                            <div class="admin-toolbar-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-funnel me-1"></i>
+                                    Filtruj
+                                </button>
+                                <a href="{{ url_for('admin_dashboard', tab='documents') }}" class="btn btn-outline-secondary">Reset</a>
+                            </div>
+                        </form>
+                    </div>
+
+                    {% if documents %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Dokument</th>
+                                        <th>Właściciel</th>
+                                        <th>Data dodania</th>
+                                        <th>Zasoby</th>
+                                        <th class="text-end pe-4">Akcje</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for document in documents %}
+                                        <tr>
+                                            <td class="ps-4">
+                                                <div class="fw-semibold text-dark">{{ document.title }}</div>
+                                                <small class="text-muted">ID: {{ document.id }}</small>
+                                            </td>
+                                            <td>
+                                                <div class="fw-semibold text-dark">{{ document.owner_email }}</div>
+                                                <small class="text-muted">Użytkownik #{{ document.owner_id }}</small>
+                                            </td>
+                                            <td>{{ document.uploaded_at.strftime('%d.%m.%Y %H:%M') if document.uploaded_at else '-' }}</td>
+                                            <td>
+                                                <div class="d-flex flex-wrap gap-2">
+                                                    <span class="badge badge-source">
+                                                        <i class="bi bi-card-text"></i>
+                                                        {{ document.summaries_count }} streszczeń
+                                                    </span>
+                                                    <span class="badge badge-source">
+                                                        <i class="bi bi-layers"></i>
+                                                        {{ document.flashcards_count }} fiszek
+                                                    </span>
+                                                    <span class="badge badge-source">
+                                                        <i class="bi bi-patch-question"></i>
+                                                        {{ document.quizzes_count }} quizów
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td class="text-end pe-4">
+                                                <form action="{{ url_for('admin_delete_document', doc_id=document.id) }}" method="POST" class="d-inline">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-outline-danger"
+                                                            onclick="return confirm('Czy na pewno chcesz usunąć ten dokument oraz wszystkie powiązane fiszki, quizy i streszczenia?');">
+                                                        <i class="bi bi-trash3 me-1"></i>
+                                                        Usuń
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="p-5 text-center empty-state">
+                            <i class="bi bi-file-earmark-text fs-1 mb-3 d-block"></i>
+                            <h5 class="mb-2">Brak dokumentów dla tego filtra</h5>
+                            <p class="mb-0">Poszerz wyszukiwanie lub zresetuj sortowanie i filtry, aby zobaczyć więcej danych.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.querySelectorAll('#adminTabs button[data-bs-toggle="tab"]').forEach((tabButton) => {
+        tabButton.addEventListener('shown.bs.tab', (event) => {
+            const url = new URL(window.location.href);
+            const targetTab = event.target.id === 'documents-tab' ? 'documents' : 'users';
+            url.searchParams.set('tab', targetTab);
+            window.history.replaceState({}, '', url);
+        });
+    });
+</script>
+{% endblock %}

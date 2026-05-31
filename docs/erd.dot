@@ -1,0 +1,15 @@
+digraph ERD {
+  rankdir=LR;
+  node [shape=plaintext fontname="Segoe UI" fontsize=10];
+  edge [fontsize=9 fontname="Segoe UI"];
+  "flashcards" [label=<<table border="0" cellborder="1" cellspacing="0"><tr><td bgcolor="#e8e8f8"><b>flashcards</b></td></tr><tr><td align="left" balign="left">id: INTEGER (PK)</td></tr><tr><td align="left" balign="left">question: VARCHAR(500)</td></tr><tr><td align="left" balign="left">answer: TEXT</td></tr><tr><td align="left" balign="left">created_at: DATETIME</td></tr><tr><td align="left" balign="left">user_id: INTEGER (FK)</td></tr></table>>];
+  "notes" [label=<<table border="0" cellborder="1" cellspacing="0"><tr><td bgcolor="#e8e8f8"><b>notes</b></td></tr><tr><td align="left" balign="left">id: INTEGER (PK)</td></tr><tr><td align="left" balign="left">title: VARCHAR(200)</td></tr><tr><td align="left" balign="left">content: TEXT</td></tr><tr><td align="left" balign="left">summary: TEXT</td></tr><tr><td align="left" balign="left">original_file: VARCHAR(255)</td></tr><tr><td align="left" balign="left">created_at: DATETIME</td></tr><tr><td align="left" balign="left">user_id: INTEGER (FK)</td></tr></table>>];
+  "quiz_attempts" [label=<<table border="0" cellborder="1" cellspacing="0"><tr><td bgcolor="#e8e8f8"><b>quiz_attempts</b></td></tr><tr><td align="left" balign="left">id: INTEGER (PK)</td></tr><tr><td align="left" balign="left">score: INTEGER</td></tr><tr><td align="left" balign="left">total_questions: INTEGER</td></tr><tr><td align="left" balign="left">created_at: DATETIME</td></tr><tr><td align="left" balign="left">user_id: INTEGER (FK)</td></tr><tr><td align="left" balign="left">quiz_id: INTEGER (FK)</td></tr></table>>];
+  "quizzes" [label=<<table border="0" cellborder="1" cellspacing="0"><tr><td bgcolor="#e8e8f8"><b>quizzes</b></td></tr><tr><td align="left" balign="left">id: INTEGER (PK)</td></tr><tr><td align="left" balign="left">title: VARCHAR(200)</td></tr><tr><td align="left" balign="left">questions: TEXT</td></tr><tr><td align="left" balign="left">created_at: DATETIME</td></tr><tr><td align="left" balign="left">user_id: INTEGER (FK)</td></tr></table>>];
+  "users" [label=<<table border="0" cellborder="1" cellspacing="0"><tr><td bgcolor="#e8e8f8"><b>users</b></td></tr><tr><td align="left" balign="left">id: INTEGER (PK)</td></tr><tr><td align="left" balign="left">username: VARCHAR(80)</td></tr><tr><td align="left" balign="left">email: VARCHAR(120)</td></tr><tr><td align="left" balign="left">password_hash: VARCHAR(255)</td></tr><tr><td align="left" balign="left">is_admin: BOOLEAN</td></tr><tr><td align="left" balign="left">created_at: DATETIME</td></tr></table>>];
+  "flashcards" -> "users" [label="FK", arrowhead=vee];
+  "notes" -> "users" [label="FK", arrowhead=vee];
+  "quiz_attempts" -> "users" [label="FK", arrowhead=vee];
+  "quiz_attempts" -> "quizzes" [label="FK", arrowhead=vee];
+  "quizzes" -> "users" [label="FK", arrowhead=vee];
+}
