@@ -95,7 +95,7 @@
                         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
                             <div>
                                 <h4 class="mb-1">Talia fiszek z tego materiału</h4>
-                                <p class="mb-0 text-muted">Powtarzaj kluczowe pojęcia w trybie SRS.</p>
+                                <p class="mb-0 text-muted">Powtarzaj kluczowe pojęcia w trybie SRS. Możesz edytować lub usunąć słabe fiszki po wygenerowaniu.</p>
                             </div>
                             <div class="d-flex flex-wrap gap-2">
                                 {% if flashcards %}
@@ -122,14 +122,27 @@
                                                 <small class="text-muted">
                                                     📅 Powt.: {{ card.next_review.strftime('%d.%m.%Y') }}
                                                 </small>
-                                                <form action="{{ url_for('delete_flashcard', flashcard_id=card.id) }}"
-                                                      method="POST" class="m-0">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                            onclick="return confirm('Czy na pewno chcesz usunąć tę fiszkę?');">
-                                                        🗑️
+                                                <div class="d-flex gap-1">
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-outline-secondary edit-flashcard-btn"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#editFlashcardModal"
+                                                            data-card-id="{{ card.id }}"
+                                                            data-question='{{ card.question|tojson }}'
+                                                            data-answer='{{ card.answer|tojson }}'
+                                                            title="Edytuj fiszkę">
+                                                        ✏️
                                                     </button>
-                                                </form>
+                                                    <form action="{{ url_for('delete_flashcard', flashcard_id=card.id) }}"
+                                                          method="POST" class="m-0">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                                onclick="return confirm('Czy na pewno chcesz usunąć tę fiszkę?');"
+                                                                title="Usuń fiszkę">
+                                                            🗑️
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -232,17 +245,76 @@
         </div>
     </div>
 </section>
+
+{# Modal edycji fiszki #}
+<div class="modal fade" id="editFlashcardModal" tabindex="-1" aria-labelledby="editFlashcardModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <form id="editFlashcardForm" method="POST" action="">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editFlashcardModalLabel">Edytuj fiszkę</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editFlashcardQuestion" class="form-label">Pytanie</label>
+                        <textarea class="form-control" id="editFlashcardQuestion" name="question"
+                                  rows="3" maxlength="500" required></textarea>
+                    </div>
+                    <div class="mb-0">
+                        <label for="editFlashcardAnswer" class="form-label">Odpowiedź</label>
+                        <textarea class="form-control" id="editFlashcardAnswer" name="answer"
+                                  rows="4" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+    // Edycja fiszki — wypełnij modal danymi wybranej karty
+    (function () {
+        const modal = document.getElementById('editFlashcardModal');
+        const form = document.getElementById('editFlashcardForm');
+        const questionInput = document.getElementById('editFlashcardQuestion');
+        const answerInput = document.getElementById('editFlashcardAnswer');
+
+        document.querySelectorAll('.edit-flashcard-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const cardId = btn.getAttribute('data-card-id');
+                form.action = '/edit_flashcard/' + cardId;
+                questionInput.value = JSON.parse(btn.getAttribute('data-question') || '""');
+                answerInput.value = JSON.parse(btn.getAttribute('data-answer') || '""');
+            });
+        });
+
+        modal.addEventListener('hidden.bs.modal', () => {
+            form.action = '';
+            questionInput.value = '';
+            answerInput.value = '';
+        });
+    })();
+
     // Pamiętaj wybraną zakładkę między odświeżeniami / powrotami w obrębie tego dokumentu
     (function () {
         const STORAGE_KEY = 'sf-document-hub-tab-{{ note.id }}';
         const triggerEls = document.querySelectorAll('#documentHubTabs button[data-bs-toggle="tab"]');
 
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
+        const hashTarget = window.location.hash;
+        if (hashTarget && hashTarget.startsWith('#') && document.querySelector('#documentHubTabs button[data-bs-target="' + hashTarget + '"]')) {
+            bootstrap.Tab.getOrCreateInstance(
+                document.querySelector('#documentHubTabs button[data-bs-target="' + hashTarget + '"]')
+            ).show();
+        } else if (saved) {
             const savedBtn = document.querySelector('#documentHubTabs button[data-bs-target="' + saved + '"]');
             if (savedBtn) {
                 bootstrap.Tab.getOrCreateInstance(savedBtn).show();

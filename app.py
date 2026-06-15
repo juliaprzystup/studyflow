@@ -1042,6 +1042,33 @@ def update_flashcard(card_id):
     })
 
 
+@app.route('/edit_flashcard/<int:flashcard_id>', methods=['POST'])
+@login_required
+def edit_flashcard(flashcard_id):
+    flashcard = Flashcard.query.get_or_404(flashcard_id)
+
+    if flashcard.document.user_id != current_user.id:
+        flash('Brak uprawnień do edycji tej fiszki!', 'danger')
+        return redirect(url_for('flashcards_list'))
+
+    question = (request.form.get('question') or '').strip()
+    answer = (request.form.get('answer') or '').strip()
+
+    if len(question) < 3:
+        flash('Pytanie fiszki musi mieć co najmniej 3 znaki.', 'danger')
+        return redirect(url_for('view_note', note_id=flashcard.document_id) + '#flashcards-pane')
+
+    if not answer:
+        flash('Odpowiedź fiszki nie może być pusta.', 'danger')
+        return redirect(url_for('view_note', note_id=flashcard.document_id) + '#flashcards-pane')
+
+    flashcard.question = question[:500]
+    flashcard.answer = answer
+    db.session.commit()
+    flash('Fiszka została zaktualizowana.', 'success')
+    return redirect(url_for('view_note', note_id=flashcard.document_id) + '#flashcards-pane')
+
+
 @app.route('/delete_flashcard/<int:flashcard_id>', methods=['POST'])
 @login_required
 def delete_flashcard(flashcard_id):
