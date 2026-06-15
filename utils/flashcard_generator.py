@@ -9,6 +9,26 @@ except Exception as e:
     print("UWAGA: Nie udało się załadować modelu 'pl_core_news_sm':", e)
     nlp = None
 
+PERSON_LABELS = frozenset({"PER", "PERSON", "persName"})
+_SKIP_PERSON_NAMES = frozenset({"fiszki", "enigmy", "studyflow", "eliza"})
+
+
+def _person_entities(doc):
+    persons = []
+    seen = set()
+    for ent in doc.ents:
+        if ent.label_ not in PERSON_LABELS:
+            continue
+        name = ent.text.strip()
+        if len(name) < 3 or name.lower() in _SKIP_PERSON_NAMES:
+            continue
+        key = name.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        persons.append(name)
+    return persons
+
 
 # ── Bramka jakości zdań (identyczna jak w text_processor) ────────────────────
 _LIST_MARKER = re.compile(
@@ -111,9 +131,7 @@ def generate_flashcards(text, num_cards=10):
                 })
 
     # 3. FISZKI O OSOBACH (NER)
-    persons = list(dict.fromkeys(
-        ent.text.strip() for ent in doc.ents if ent.label_ in ("PER", "PERSON")
-    ))
+    persons = _person_entities(doc)
 
     for sent in doc.sents:
         sent_text = sent.text.strip()

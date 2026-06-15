@@ -8,6 +8,46 @@ except Exception as e:
     print("UWAGA: Nie udało się załadować modelu 'pl_core_news_sm':", e)
     nlp = None
 
+# pol_core_news_sm używa persName / placeName (nie PER / LOC jak w modelach angielskich)
+PERSON_LABELS = frozenset({"PER", "PERSON", "persName"})
+LOCATION_LABELS = frozenset({"LOC", "GPE", "placeName"})
+_SKIP_PERSON_NAMES = frozenset({"fiszki", "enigmy", "studyflow", "eliza"})
+
+
+def _person_entities(doc):
+    persons = []
+    seen = set()
+    for ent in doc.ents:
+        if ent.label_ not in PERSON_LABELS:
+            continue
+        name = ent.text.strip()
+        if len(name) < 3 or name.lower() in _SKIP_PERSON_NAMES:
+            continue
+        key = name.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        persons.append(name)
+    return persons
+
+
+def _location_entities(doc):
+    locations = []
+    seen = set()
+    for ent in doc.ents:
+        if ent.label_ not in LOCATION_LABELS:
+            continue
+        name = ent.text.strip()
+        # pomijaj przymiotnikowe false-positive (np. „polskim”, „brytyjskim”)
+        if len(name) < 4 or name[0].islower():
+            continue
+        key = name.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        locations.append(name)
+    return locations
+
 
 # ── Bramka jakości zdań ───────────────────────────────────────────────────────
 
@@ -109,23 +149,27 @@ def generate_smart_quiz(text, num_questions=5):
     text = re.sub(r'\s+', ' ', text)
 
     doc = nlp(text)
-    all_questions = []
+    # Daty i NER najpierw — pytania definicyjne na końcu (lepsze dystraktory na demo)
+    pools = [
+        extract_date_questions(doc),
+        extract_person_questions(doc),
+        extract_location_questions(doc),
+        extract_number_questions(doc),
+        extract_definition_questions(doc),
+    ]
 
-    all_questions.extend(extract_definition_questions(doc))
-    all_questions.extend(extract_number_questions(doc))
-    all_questions.extend(extract_date_questions(doc))
-    all_questions.extend(extract_person_questions(doc))
-    all_questions.extend(extract_location_questions(doc))
+    all_questions = []
+    for pool in pools:
+        all_questions.extend(pool)
 
     seen = set()
     unique_questions = []
     for q in all_questions:
-        q_hash = q['question'][:60]
+        q_hash = q["question"][:60]
         if q_hash not in seen:
             seen.add(q_hash)
             unique_questions.append(q)
 
-    random.shuffle(unique_questions)
     return unique_questions[:num_questions]
 
 
@@ -176,9 +220,7 @@ def extract_date_questions(doc):
 def extract_person_questions(doc):
     questions = []
 
-    persons = list(dict.fromkeys(
-        ent.text.strip() for ent in doc.ents if ent.label_ in ("PER", "PERSON")
-    ))
+    persons = _person_entities(doc)
 
     if len(persons) < 4:
         return questions
@@ -220,9 +262,7 @@ def extract_person_questions(doc):
 def extract_location_questions(doc):
     questions = []
 
-    locations = list(dict.fromkeys(
-        ent.text.strip() for ent in doc.ents if ent.label_ in ("LOC", "GPE")
-    ))
+    locations = _location_entities(doc)
 
     if len(locations) < 4:
         return questions
@@ -356,7 +396,7 @@ def extract_definition_questions(doc):
     # Zbiór osób rozpoznanych przez spaCy
     blocked_terms = set()
     for ent in doc.ents:
-        if ent.label_ in {"PER", "PERSON"}:
+        if ent.label_ in PERSON_LABELS:
             blocked_terms.add(ent.text.strip().lower())
 
     definition_items = []
