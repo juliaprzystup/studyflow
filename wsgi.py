@@ -8,12 +8,13 @@ Dlatego powtarzamy te inicjalizacje tutaj, aby aplikacja dzialala po wdrozeniu.
 """
 import os
 
-from app import app, db
+from app import app, db, migrate_legacy_document_titles
 
 with app.app_context():
-    upload_folder = app.config.get("UPLOAD_FOLDER", "static/uploads")
+    upload_folder = os.path.join(app.root_path, app.config.get("UPLOAD_FOLDER", "static/uploads"))
     os.makedirs(upload_folder, exist_ok=True)
     db.create_all()
+    migrate_legacy_document_titles()
 
 
 if __name__ == "__main__":

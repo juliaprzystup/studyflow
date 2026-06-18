@@ -23,7 +23,7 @@ from utils.text_processor import (
 import random
 import os
 import re
-import uuid
+import tempfile
 from werkzeug.utils import secure_filename
 
 # Inicjalizacja aplikacji
@@ -83,19 +83,46 @@ def redirect_to_admin_dashboard(default_tab='users'):
     ))
 
 
+def get_document_storage_filename(document):
+    """Nazwa pliku na dysku — legacy: UUID w title; nowe: {id}_{oryginalna_nazwa}."""
+    if re.match(r'^[a-f0-9]{32}_', document.title, re.IGNORECASE):
+        return document.title
+    return f"{document.id}_{document.title}"
+
+
 def get_document_upload_path(document):
-    return os.path.join(app.root_path, app.config['UPLOAD_FOLDER'], document.title)
+    return os.path.join(
+        app.root_path,
+        app.config['UPLOAD_FOLDER'],
+        get_document_storage_filename(document),
+    )
+
+
+def migrate_legacy_document_titles():
+    """Jednorazowo: title = oryginalna nazwa, plik na dysku = {id}_{nazwa}."""
+    upload_dir = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
+    changed = False
+
+    for document in Document.query.all():
+        match = re.match(r'^[a-f0-9]{32}_(.+)$', document.title, re.IGNORECASE)
+        if not match:
+            continue
+
+        clean_title = match.group(1)
+        old_path = os.path.join(upload_dir, document.title)
+        new_path = os.path.join(upload_dir, f"{document.id}_{clean_title}")
+
+        if os.path.exists(old_path) and not os.path.exists(new_path):
+            os.rename(old_path, new_path)
+
+        document.title = clean_title
+        changed = True
+
+    if changed:
+        db.session.commit()
 
 
 def cleanup_document_file(document):
-    duplicate_document = Document.query.filter(
-        Document.id != document.id,
-        Document.title == document.title
-    ).first()
-
-    if duplicate_document:
-        return
-
     file_path = get_document_upload_path(document)
     if os.path.exists(file_path):
         try:
@@ -573,42 +600,50 @@ def upload_file():
             return redirect(request.url)
 
         if file and allowed_file(file.filename):
-            filename = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
+            original_name = secure_filename(file.filename)
+            file_extension = original_name.rsplit('.', 1)[1].lower()
 
-            file_extension = filename.rsplit('.', 1)[1].lower()
+            with tempfile.NamedTemporaryFile(delete=False) as tmp:
+                temp_path = tmp.name
+                file.save(temp_path)
 
-            if file_extension == 'pdf':
-                text = extract_text_from_pdf(filepath)
-            elif file_extension in ['doc', 'docx']:
-                text = extract_text_from_docx(filepath)
-            elif file_extension == 'txt':
-                text = extract_text_from_txt(filepath)
-            else:
-                flash('Nieobsługiwany typ pliku!', 'danger')
-                return redirect(request.url)
+            try:
+                if file_extension == 'pdf':
+                    text = extract_text_from_pdf(temp_path)
+                elif file_extension in ['doc', 'docx']:
+                    text = extract_text_from_docx(temp_path)
+                elif file_extension == 'txt':
+                    text = extract_text_from_txt(temp_path)
+                else:
+                    flash('Nieobsługiwany typ pliku!', 'danger')
+                    return redirect(request.url)
 
-            # Czyszczenie całego tekstu
-            full_text = clean_text(text)
+                full_text = clean_text(text)
 
-            # Zapis dokumentu z przetworzonym tekstem
-            new_note = Document(
-                title=filename,
-                processed_text=full_text,
-                user_id=current_user.id
-            )
-            db.session.add(new_note)
-            db.session.flush()
+                new_note = Document(
+                    title=original_name,
+                    processed_text=full_text,
+                    user_id=current_user.id,
+                )
+                db.session.add(new_note)
+                db.session.flush()
 
-            # Generowanie i zapis streszczenia TextRank
-            summary = generate_summary(full_text, num_sentences=10)
-            db.session.add(Summary(document_id=new_note.id, content=summary))
-            log_study_activity(current_user.id, 'upload')
-            db.session.commit()
+                upload_dir = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
+                os.makedirs(upload_dir, exist_ok=True)
+                storage_path = os.path.join(upload_dir, f"{new_note.id}_{original_name}")
+                os.replace(temp_path, storage_path)
+                temp_path = None
 
-            flash('Plik został przesłany i przetworzony!', 'success')
-            return redirect(url_for('view_note', note_id=new_note.id))
+                summary = generate_summary(full_text, num_sentences=10)
+                db.session.add(Summary(document_id=new_note.id, content=summary))
+                log_study_activity(current_user.id, 'upload')
+                db.session.commit()
+
+                flash('Plik został przesłany i przetworzony!', 'success')
+                return redirect(url_for('view_note', note_id=new_note.id))
+            finally:
+                if temp_path and os.path.exists(temp_path):
+                    os.remove(temp_path)
 
         else:
             flash('Niedozwolony typ pliku! Dozwolone: txt, pdf, doc, docx', 'danger')
@@ -1128,6 +1163,7 @@ if __name__ == '__main__':
 
     with app.app_context():
         db.create_all()
+        migrate_legacy_document_titles()
         print("Baza danych została utworzona/zaktualizowana!")
 
     debug_mode = os.environ.get('FLASK_DEBUG') == '1'
