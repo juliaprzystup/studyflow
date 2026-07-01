@@ -747,7 +747,7 @@ def generate_quiz(note_id):
     flash('Quiz został wygenerowany!', 'success')
     return redirect(url_for('take_quiz', quiz_id=new_quiz.id))
 
-# --- ROZWIĄZYWANIE QUIZU (ZMODYFIKOWANE) ---
+# Rozwiązywanie quizu
 @app.route('/quiz/<int:quiz_id>', methods=['GET', 'POST'])
 @login_required
 def take_quiz(quiz_id):

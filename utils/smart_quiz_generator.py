@@ -411,7 +411,7 @@ def extract_definition_questions(doc):
         if not is_valid_definition_term(term):
             continue
 
-        # Kluczowa poprawka: pomiń osoby
+        # Pomiń osoby rozpoznane przez NER
         if term.lower() in blocked_terms:
             continue
 
