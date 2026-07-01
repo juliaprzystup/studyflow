@@ -17,7 +17,7 @@ Serwer pobierze kod z GitHuba. Repozytorium może być **prywatne**.
 Na swoim komputerze (PowerShell), w folderze `fiszki_app`:
 
 ```powershell
-cd C:\Users\julia\PycharmProjects\fiszki_app
+cd ścieżka\do\fiszki_app
 git init
 git add .
 git commit -m "StudyFlow - wersja do wdrozenia"
